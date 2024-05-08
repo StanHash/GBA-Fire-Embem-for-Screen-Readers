@@ -214,7 +214,7 @@ function dialogue.Dialogue:slice_at_addr(string_addr)
     for i = 1, #self.a_points - 1 do
         if string_addr > self.a_points[i].addr and string_addr <= self.a_points[i + 1].addr then
             local offset_from = self.a_points[i].offset
-            local offset_to = self.a_points[i + 1].offset
+            local offset_to = self.a_points[i + 1].offset - 1
 
             return self.talk:sub(offset_from, offset_to)
         end

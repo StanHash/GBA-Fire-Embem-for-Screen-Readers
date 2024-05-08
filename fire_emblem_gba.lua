@@ -214,7 +214,7 @@ local commands = {
     ["M"] = function(shift_held)
         if shift_held then
             menu_toggle = not menu_toggle
-            output("Menu command toggle " .. boolean_on_off(talk_toggle))
+            output("Menu command toggle " .. boolean_on_off(menu_toggle))
         else
             output(menus.GetCurrentMenuItemName())
         end
