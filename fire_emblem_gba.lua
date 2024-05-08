@@ -69,12 +69,14 @@ end
 local debug = true
 
 local function output(message)
-    if debug then
-        -- this may be undesirable when running for real?
-        print(message)
-    end
+    if #message > 0 then
+        if debug then
+            -- this may be undesirable when running for real?
+            print(message)
+        end
 
-    tolk.output(message)
+        tolk.output(message)
+    end
 end
 
 local function boolean_on_off(bool_value)
@@ -84,6 +86,8 @@ end
 local terrain_toggle = false
 local coord_toggle = false
 local unit_toggle = false
+local talk_toggle = false
+local menu_toggle = false
 
 local prev = {}
 
@@ -153,7 +157,12 @@ local commands = {
     end,
 
     ["L"] = function(shift_held)
-        output(dialogue.GetTalkString())
+        if shift_held then
+            talk_toggle = not talk_toggle
+            output("Follow dialogue toggle " .. boolean_on_off(talk_toggle))
+        else
+            output(dialogue.GetCurrentSlice())
+        end
     end
 }
 
@@ -205,9 +214,31 @@ local function process_coordinate_changes()
     prev_x, prev_y = x, y
 end
 
+local was_talk_active = false
+local last_slice = nil
+
+local function process_follow_dialogue()
+    local talk_active = dialogue.IsTalkActive()
+    local current_slice = dialogue.GetCurrentSlice()
+
+    if talk_toggle then
+        if talk_active then
+            if current_slice ~= last_slice then
+                output(current_slice)
+            end
+        elseif was_talk_active then
+            output("End of dialogue")
+        end
+    end
+
+    last_slice = current_slice
+    was_talk_active = talk_active
+end
+
 local function main_loop()
     handle_user_input()
     process_coordinate_changes()
+    process_follow_dialogue()
 end
 
 output("Ready")
