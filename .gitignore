@@ -1,0 +1,6 @@
+# ignore every hidden file and folder, execpt .git files
+.*
+!.git*
+
+# ignore DLLs
+*.dll
