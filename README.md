@@ -16,7 +16,7 @@ These scripts are designed for use with the VBA-ReRecording emulator running on 
 ## Installation
 
 1. You will need to have a ROM of the game, if you don't already have one. Currently only Fire Emblem 8 is supported. Most mods of that game will also work.
-2. Obtain the latest packaged release of the scripts via the following line: https://github.com/StanHash/GBA-Fire-Embem-for-Screen-Readers/releases/latest/download/fire_emblem_screen_reader.zip. The releases section of the GitHub repository features any older releases.
+2. Obtain the latest packaged release of the scripts via the following link: https://github.com/StanHash/GBA-Fire-Embem-for-Screen-Readers/releases/latest/download/fire_emblem_screen_reader.zip. The releases section of the GitHub repository features any older releases.
 3. Extract the package and run the included VBA emulator.
 4. Go to the Options menu, Head-Up Display, Show Speed, None. (Alt-O, H, S, Enter). NVDA reads the title bar every time it changes, and this prevents it from changing.
 5. Optional but recommended: turn down the sound. In the Options menu, navigate to Audio, Volume. (Alt-O, A, V). I recommend .25x.
@@ -43,7 +43,13 @@ If you hold Shift as you press a key, automatic reading will be toggled. For exa
 
 ## Licence
 
-Some files of this project are based on the work done on the pokemon-access project, which does not yet specify explicit licencing or copyright information. Any other file is dedicated to the Public Domain, or otherwise licenced under the CC0 Licence. 
+Some files of this project are based on the work done on the pokemon-access project, which does not yet specify explicit licencing or copyright information. Any other file is dedicated to the Public Domain, or otherwise licenced under the CC0 Licence.
+
+Releases feature binaries for [VBA-ReRecording][VBA-ReRecording], licenced under GPL-2.0, [LuaJIT][LuaJIT], licenced under MIT, [Tolk][Tolk], licenced under LGPL-3.0, and Tolk's dependencies (refer to Tolk).
+
+[VBA-ReRecording]: https://github.com/TASEmulators/vba-rerecording
+[LuaJIT]: https://luajit.org/luajit.html
+[Tolk]: https://github.com/dkager/tolk/
 
 ## Contact
 
