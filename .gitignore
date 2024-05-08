@@ -4,3 +4,6 @@
 
 # ignore DLLs
 *.dll
+
+# ignore ZIPs
+*.zip
