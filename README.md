@@ -37,9 +37,11 @@ You interract with the script through pressing keys on your keyboard.
 - U: read unit name.
 - J: read unit class name.
 - H: read unit HP.
-- L: read current dialogue.
+- L: read the current dialogue line.
+- M: read the currently selected menu item.
+- I: read unit's held item name. If the unit has more than one item, repeated presses will cycle through their inventory.
 
-If you hold Shift as you press a key, automatic reading will be toggled. For example, Shift-T will make the script read the terrain name every time the cursor moves to a new position.
+If you hold Shift as you press most keys, automatic reading will be toggled. For example, Shift-T will make the script read the terrain name every time the cursor moves to a new position.
 
 ## Licence
 

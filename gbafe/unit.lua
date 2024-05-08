@@ -50,6 +50,21 @@ function Unit:current_hp()
     return memory.readbyte(self.unit_addr + 0x13)
 end
 
+function Unit:get_item(slot)
+    -- NOTE: FE6 would be different
+    return memory.readshort(self.unit_addr + 0x1E + 2 * slot)
+end
+
+function Unit:get_item_count()
+    for i = 0, 4 do
+        if self:get_item(i) == 0 then
+            return i
+        end
+    end
+
+    return 5
+end
+
 function Unit:flags()
     -- NOTE: FE6 would be readshort
     return memory.readlong(self.unit_addr + 0x0C)

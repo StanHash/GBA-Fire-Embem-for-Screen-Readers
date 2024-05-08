@@ -1,8 +1,9 @@
 -- some of this references the work done on pokemon-access
 
 local board = require 'gbafe.board'
-local strings = require 'gbafe.strings'
 local dialogue = require 'gbafe.dialogue'
+local menus = require 'gbafe.menus'
+local items = require 'gbafe.items'
 
 local tolk = require 'tolk'
 
@@ -86,6 +87,8 @@ end
 local terrain_toggle = false
 local coord_toggle = false
 local unit_toggle = false
+local unit_hp_toggle = false
+local unit_class_toggle = false
 local talk_toggle = false
 local menu_toggle = false
 
@@ -106,6 +109,39 @@ local function current_unit_output(func)
             output("No unit")
         end
     end
+end
+
+local last_unit_for_item = nil
+local last_item_slot = -1
+
+local NTH = { [1] = '1st', [2] = "2nd", [3] = "3rd", [4] = "4th", [5] = "5th" }
+
+local function unit_item(unit)
+    if last_unit_for_item == nil or unit:unit_id() ~= last_unit_for_item:unit_id() then
+        last_item_slot = -1
+    end
+
+    last_unit_for_item = unit
+
+    if unit:get_item_count() == 1 then
+        return items.GetItemName(unit:get_item(0))
+    end
+
+    for i = 1, 5 do
+        local item_slot = (last_item_slot + i) % 5
+        local item = unit:get_item(item_slot)
+
+        if item ~= 0 then
+            -- TODO: handle unbreakable items
+            -- local uses = items.GetItemUses(item)
+            -- local max_uses = items.GetItemMaxUses(item)
+
+            last_item_slot = item_slot
+            return NTH[1 + item_slot] .. " item: " .. items.GetItemName(item)
+        end
+    end
+
+    return "This unit has no items"
 end
 
 -- NOT OK KEYS: X C A S (Q)
@@ -145,15 +181,25 @@ local commands = {
     end,
 
     ["H"] = function(shift_held)
-        current_unit_output(function(unit)
-            return unit:current_hp() .. " HP out of " .. unit:max_hp()
-        end)
+        if shift_held then
+            unit_hp_toggle = not unit_hp_toggle
+            output("Unit HP toggle " .. boolean_on_off(unit_hp_toggle))
+        else
+            current_unit_output(function(unit)
+                return unit:current_hp() .. " HP out of " .. unit:max_hp()
+            end)
+        end
     end,
 
     ["J"] = function(shift_held)
-        current_unit_output(function(unit)
-            return unit:jid_name()
-        end)
+        if shift_held then
+            unit_class_toggle = not unit_class_toggle
+            output("Unit Class toggle " .. boolean_on_off(unit_class_toggle))
+        else
+            current_unit_output(function(unit)
+                return unit:jid_name()
+            end)
+        end
     end,
 
     ["L"] = function(shift_held)
@@ -163,7 +209,24 @@ local commands = {
         else
             output(dialogue.GetCurrentSlice())
         end
-    end
+    end,
+
+    ["M"] = function(shift_held)
+        if shift_held then
+            menu_toggle = not menu_toggle
+            output("Menu command toggle " .. boolean_on_off(talk_toggle))
+        else
+            output(menus.GetCurrentMenuItemName())
+        end
+    end,
+
+    ["I"] = function(shift_held)
+        if shift_held then
+            output("Unit Item is not toggleable")
+        else
+            current_unit_output(unit_item)
+        end
+    end,
 }
 
 local function handle_user_input()
@@ -196,22 +259,49 @@ local function process_coordinate_changes()
             messages[#messages + 1] = board.GetTerrainNameAt(x, y)
         end
 
-        if unit_toggle then
-            local unit = board.GetUnitAt(x, y)
+        local unit = board.GetUnitAt(x, y)
 
-            if unit ~= nil then
+        if unit ~= nil then
+            if unit_toggle then
                 messages[#messages + 1] = nicer_unit(unit)
+            end
+
+            if unit_class_toggle then
+                messages[#messages + 1] = unit:jid_name()
+            end
+
+            if unit_hp_toggle then
+                messages[#messages + 1] = unit:current_hp() .. " HP out of " .. unit:max_hp()
             end
         end
 
-        local message = join(" ", messages)
+        -- local message = join(" ", messages)
 
-        if message ~= nil then
+        -- if message ~= nil then
+        --     output(message)
+        -- end
+
+        for i, message in ipairs(messages) do
             output(message)
         end
     end
 
     prev_x, prev_y = x, y
+end
+
+local last_menu_item = nil
+
+local function process_menu_items()
+    local in_menu = menus.IsMenuActive()
+    local current_item = menus.GetCurrentMenuItemName()
+
+    if in_menu then
+        if current_item ~= last_menu_item then
+            output(current_item)
+        end
+    end
+
+    last_menu_item = current_item
 end
 
 local was_talk_active = false
@@ -238,6 +328,7 @@ end
 local function main_loop()
     handle_user_input()
     process_coordinate_changes()
+    process_menu_items()
     process_follow_dialogue()
 end
 

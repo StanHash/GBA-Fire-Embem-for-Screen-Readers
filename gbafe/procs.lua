@@ -3,10 +3,11 @@
 
 -- get access to procs
 
+local procs = {}
+
+-- TODO: move elsewhere
 local addr_ProcArray = 0x02024E68
 local addr_ProcTrees = 0x02026A70
-
-local procs = {}
 
 local function iter_procs(func)
     for i = 0, 0x3F do
@@ -19,16 +20,20 @@ local function iter_procs(func)
     end
 end
 
-function procs.IsProcRunning(proc_script_addr)
-    local found = false
+function procs.FindProc(proc_script_addr)
+    local addr = nil
 
     iter_procs(function(proc_addr, this_proc_script_addr)
         if this_proc_script_addr == proc_script_addr then
-            found = true
+            addr = proc_addr
         end
     end)
 
-    return found
+    return addr
+end
+
+function procs.IsProcRunning(proc_script_addr)
+    return procs.FindProc(proc_script_addr) ~= nil
 end
 
 return procs
