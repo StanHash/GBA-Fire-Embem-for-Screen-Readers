@@ -33,13 +33,15 @@ You interract with the script through pressing keys on your keyboard.
 
 - Default GBA controls: Z X are A B, A S are L R, Enter Backspace are Start Select, Arrows are D Pad.
 - Y: read current board cursor position. Positions are formatted like chess coordinates. (For example: "A1" means the top left corner of the board).
+- G: read basic description of current screen.
 - T: read terrain name under cursor.
 - U: read unit name.
 - J: read unit class name.
 - H: read unit HP.
 - L: read the current dialogue line.
-- M: read the currently selected menu item.
+- M: read the currently selected menu item, or which unit is currently being targetted.
 - I: read unit's held item name. If the unit has more than one item, repeated presses will cycle through their inventory.
+- B: read battle forecast.
 
 If you hold Shift as you press most keys, automatic reading will be toggled. For example, Shift-T will make the script read the terrain name every time the cursor moves to a new position.
 
