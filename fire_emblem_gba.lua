@@ -3,6 +3,7 @@
 local board = require 'gbafe.board'
 local dialogue = require 'gbafe.dialogue'
 local menus = require 'gbafe.menus'
+local text = require 'gbafe.text'
 
 local tolk = require 'tolk'
 
@@ -32,21 +33,6 @@ end
 -- translates a in-game position to a spreadsheet-like coordinate
 local function position_to_cell(x, y)
     return coord_to_sheet_column(x) .. (y + 1)
-end
-
--- join list of strings with sep
-local function join(sep, string_list)
-    if #string_list > 0 then
-        local message = string_list[1]
-
-        for i = 2, #string_list do
-            message = message .. sep .. string_list[i]
-        end
-
-        return message
-    else
-        return nil
-    end
 end
 
 local function nicer_unit(unit)
@@ -237,7 +223,7 @@ local commands = {
             menu_toggle = not menu_toggle
             output("Menu command toggle " .. boolean_on_off(menu_toggle))
         else
-            output(menus.GetCurrentMenuItemName())
+            output(menus.GetCurrentMenuItemName() or "Unknown menu item")
         end
     end,
 
@@ -317,7 +303,7 @@ local function process_menu_items()
     local current_item = menus.GetCurrentMenuItemName()
 
     if menu_toggle then
-        if in_menu then
+        if in_menu and current_item ~= nil then
             if current_item ~= last_menu_item then
                 output(current_item)
             end
@@ -354,6 +340,8 @@ local function main_loop()
     process_menu_items()
     process_follow_dialogue()
 end
+
+text.monitor:init()
 
 output("Ready")
 

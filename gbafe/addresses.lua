@@ -9,6 +9,8 @@ local a = {}
 
 a.ProcArray = 0x02024E68
 a.ProcTrees = 0x02026A70
+a.DefaultFont = 0x02028E58
+a.ActiveFont = 0x02028E70
 a.StringBuf = 0x202A6AC
 a.BmStatus = 0x0202BCB0
 a.MapSize = 0x0202E4D4
@@ -16,6 +18,11 @@ a.MapUnit = 0x0202E4D8
 a.MapTerrain = 0x0202E4DC
 
 a.ActiveUnit = 0x03004E50
+
+a.InitTextFont = 0x08003CB8
+a.ResetTextFont = 0x08003D20
+a.InitText = 0x08003D5C
+a.Text_DrawString = 0x08004004
 
 a.HuffTable = 0x0815A72C
 a.HuffRoot = 0x0815D488
