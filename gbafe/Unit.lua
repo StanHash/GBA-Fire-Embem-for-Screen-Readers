@@ -4,6 +4,7 @@
 -- wrapper and helpers for interacting with GBAFE Units
 -- TODO: handle FE6 vs. non-FE6 (struct layout changes slightly)
 
+local addrs = require 'gbafe.addresses'
 local strings = require 'gbafe.strings'
 
 local Item = require 'gbafe.Item'
@@ -16,11 +17,23 @@ local Unit = {}
 Unit.__index = Unit
 
 --- Create a unit from its address
----@param unit_addr integer address of unit object
----@return Unit
+--- @param unit_addr integer address of unit object
+--- @return Unit
 function Unit:new(unit_addr)
-    local result = { unit_addr = unit_addr }
-    return setmetatable(result, self)
+    return setmetatable({ unit_addr = unit_addr }, self)
+end
+
+--- Create a unit from its internal ID
+--- @param unit_id integer
+--- @return Unit|nil
+function Unit:from_id(unit_id)
+    local unit_addr = memory.readlong(addrs.UnitLookup + unit_id * 4)
+
+    if unit_addr ~= 0 then
+        return Unit:new(unit_addr)
+    else
+        return nil
+    end
 end
 
 --- Get the units PID name message id (character name id)

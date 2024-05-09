@@ -4,10 +4,39 @@ local board = require 'gbafe.board'
 local dialogue = require 'gbafe.dialogue'
 local menus = require 'gbafe.menus'
 local text = require 'gbafe.text'
+local target_select = require 'gbafe.target_select'
+local battle_forecast = require 'gbafe.battle_forecast'
+
+local BattleUnit = require 'gbafe.BattleUnit'
 
 local tolk = require 'tolk'
 
 local prev_x, prev_y = 0, 0
+
+--- @param message string
+--- @param pred fun(): boolean
+local function screen_info(message, pred)
+    return { message = message, predicate = pred }
+end
+
+-- list of screens, most important first
+local screen_info_table = {
+    screen_info("Dialogue", dialogue.IsTalkActive),
+    screen_info("Battle Target Selection", battle_forecast.IsActive),
+    screen_info("Target Selection", target_select.IsActive),
+    screen_info("Menu", menus.IsMenuActive),
+    screen_info("Field", board.IsBoardVisible),
+}
+
+local function get_screen_message()
+    for _, tab in ipairs(screen_info_table) do
+        if tab.predicate() then
+            return tab.message
+        end
+    end
+
+    return nil
+end
 
 local function coord_to_sheet_column(coord)
     local A = string.byte('A')
@@ -37,14 +66,11 @@ end
 
 local function nicer_unit(unit)
     local unit_id = unit:unit_id()
-
     local name = unit:pid_name()
 
-    -- local class_msg = unit:jid_name_msg()
-    -- local class_str = GetString(class_msg)
-
     if unit_id >= 0x80 then
-        return "Enemy " .. name .. " " .. ((unit:is_boss() and "Boss") or (unit_id - 0x80))
+        local local_id = unit_id - 0x80
+        return "Enemy " .. name .. " " .. ((unit:is_boss() and "Boss") or local_id)
     elseif unit_id >= 0x40 then
         return "NPC " .. name
     else
@@ -90,6 +116,14 @@ local function current_unit_output(func)
     local x, y = board.GetCursorPosition()
     local unit = board.GetUnitAt(x, y)
 
+    if target_select.IsActive() then
+        local target_addr = target_select.GetCurrentTargetAddr()
+
+        if target_addr ~= nil then
+            unit = target_select.Target:new(target_addr):unit() or unit
+        end
+    end
+
     if unit ~= nil then
         output(func(unit))
     else
@@ -133,7 +167,15 @@ local function unit_item(unit)
             local max_uses = item:max_uses()
 
             if uses ~= 0xFF then
-                item_name = item_name .. ", " .. ("%d uses out of %d"):format(uses, max_uses)
+                item_name = item_name .. ", " .. uses
+
+                if uses == 1 then
+                    item_name = item_name .. " use left out of "
+                else
+                    item_name = item_name .. " uses left out of "
+                end
+
+                item_name = item_name .. max_uses
             end
 
             break
@@ -151,11 +193,64 @@ local function unit_item(unit)
     end
 end
 
+local function nice_battle_forecast()
+    local bu_a = BattleUnit:new_a()
+    local bu_b = BattleUnit:new_b()
+    local hits_a = battle_forecast.GetHitCountA()
+    local hits_b = battle_forecast.GetHitCountB()
+
+    local sb = ""
+
+    sb = sb .. "Your unit is " .. nicer_unit(bu_a)
+    sb = sb .. ", " .. bu_a:hp_before() .. " HP"
+    sb = sb .. ", " .. (bu_a:battle_attack() - bu_b:battle_defense()) .. " Attack"
+
+    if hits_a > 1 then
+        sb = sb .. " times " .. hits_a
+    end
+
+    sb = sb .. ", " .. bu_a:battle_hit_final() .. "% Hit"
+    sb = sb .. ", " .. bu_a:battle_crit_final() .. "% Crit"
+
+    sb = sb .. ", The opponent is " .. nicer_unit(bu_b)
+
+    local item_name_b = battle_forecast.GetItemNameB()
+
+    if item_name_b ~= nil then
+        sb = sb .. " holding " .. item_name_b
+    end
+
+    sb = sb .. ", " .. bu_b:hp_before() .. " HP"
+
+    if hits_b == 0 then
+        sb = sb .. ", Cannot counterattack"
+    else
+        sb = sb .. ", " .. (bu_b:battle_attack() - bu_a:battle_defense()) .. " Attack"
+
+        if hits_b > 1 then
+            sb = sb .. " times " .. hits_b
+        end
+
+        sb = sb .. ", " .. bu_b:battle_hit_final() .. "% Hit"
+        sb = sb .. ", " .. bu_b:battle_crit_final() .. "% Crit"
+    end
+
+    return sb
+end
+
 -- NOT OK KEYS: X C A S (Q)
 -- OK KEYS: anything else?
 
 local commands = {
     -- ["key"] = function(shift_held)
+
+    ["G"] = function(shift_held)
+        local current_screen = get_screen_message()
+
+        if current_screen ~= nil then
+            output(current_screen)
+        end
+    end,
 
     ["T"] = function(shift_held)
         -- terrain name key
@@ -223,7 +318,17 @@ local commands = {
             menu_toggle = not menu_toggle
             output("Menu command toggle " .. boolean_on_off(menu_toggle))
         else
-            output(menus.GetCurrentMenuItemName() or "Unknown menu item")
+            if target_select.IsActive() then
+                local targetted_unit = target_select.Target:new(target_select.GetCurrentTargetAddr()):unit()
+
+                if targetted_unit ~= nil then
+                    output("Targetting " .. nicer_unit(targetted_unit))
+                else
+                    output("Unknown target")
+                end
+            else
+                output(menus.GetCurrentMenuItemName() or "Unknown menu item")
+            end
         end
     end,
 
@@ -234,6 +339,14 @@ local commands = {
             current_unit_output(unit_item)
         end
     end,
+
+    ["B"] = function(shift_held)
+        if battle_forecast.IsActive() then
+            output(nice_battle_forecast())
+        else
+            output("There is no battle forecast")
+        end
+    end
 }
 
 local function handle_user_input()
@@ -334,10 +447,47 @@ local function process_follow_dialogue()
     was_talk_active = talk_active
 end
 
+local prev_screen = nil
+
+-- TODO: what to do with this?
+local function process_screen_change()
+    local current_screen = get_screen_message()
+
+    if current_screen ~= nil then
+        if current_screen ~= prev_screen and current_screen ~= nil then
+            output(current_screen)
+        end
+
+        prev_screen = current_screen
+    end
+end
+
+local prev_target_addr = nil
+
+local function process_target_change()
+    local current_target_addr = target_select.GetCurrentTargetAddr()
+
+    if menu_toggle then
+        if current_target_addr ~= prev_target_addr and current_target_addr ~= nil then
+            local targetted_unit = target_select.Target:new(current_target_addr):unit()
+
+            if targetted_unit ~= nil then
+                output("Targetting " .. nicer_unit(targetted_unit))
+            end
+        end
+    end
+
+    prev_target_addr = current_target_addr
+end
+
 local function main_loop()
     handle_user_input()
+
+    -- TODO: those should only be called when on the corresponding screen
+
     process_coordinate_changes()
     process_menu_items()
+    process_target_change()
     process_follow_dialogue()
 end
 

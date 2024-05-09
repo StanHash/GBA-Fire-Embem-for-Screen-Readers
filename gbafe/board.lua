@@ -5,6 +5,7 @@
 
 local addrs = require 'gbafe.addresses'
 local strings = require 'gbafe.strings'
+local procs = require 'gbafe.procs'
 
 local Unit = require 'gbafe.Unit'
 
@@ -54,6 +55,15 @@ function board.GetActiveUnit()
     else
         return nil
     end
+end
+
+function board.IsBoardVisible()
+    if procs.IsProcRunning(addrs.MapMainProc) then
+        local lock = memory.readbyte(addrs.BmStatus + 0x01) + memory.readbyte(addrs.BmStatus + 0x02)
+        return lock == 0
+    end
+
+    return false
 end
 
 -- grabbed from decomp symbols, unused (grabbing from in-game text)
