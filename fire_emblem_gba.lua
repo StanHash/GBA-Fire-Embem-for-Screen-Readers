@@ -166,7 +166,7 @@ local function unit_item(unit)
             local uses = item:uses()
             local max_uses = item:max_uses()
 
-            if uses ~= 0xFF then
+            if uses ~= 0 then
                 item_name = item_name .. ", " .. uses
 
                 if uses == 1 then
