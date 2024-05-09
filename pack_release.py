@@ -2,7 +2,7 @@
 # python pack_release.py [PATH/TO/VBA/DIR] [PATH/TO/DIR/WITH/DLLS]
 
 import sys, pathlib
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 # this name is what the README links to. Keep it!
 OUTPUT_FILE = "fire_emblem_screen_reader.zip"
@@ -31,7 +31,7 @@ def main(args):
     scripts = list(root.glob('**/*.lua'))
     dlls = list(dll_path.glob('*.dll'))
 
-    with ZipFile(OUTPUT_FILE, 'w') as zip:
+    with ZipFile(OUTPUT_FILE, 'w', compression=ZIP_DEFLATED) as zip:
         for script in scripts:
             zip.write(script, lua_path / script)
 
