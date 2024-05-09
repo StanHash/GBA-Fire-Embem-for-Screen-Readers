@@ -32,6 +32,9 @@ function board.GetCursorPosition()
     return x, y
 end
 
+---@param x integer
+---@param y integer
+---@return Unit | nil
 function board.GetUnitAt(x, y)
     local unit_id = deref_cell(x, y, addrs.MapUnit)
 

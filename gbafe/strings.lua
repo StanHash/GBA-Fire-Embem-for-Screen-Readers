@@ -90,6 +90,7 @@ local abbrev_table = {
     ["Mntn"] = "Mountain",
 }
 
+-- TODO: this should be better than this
 local function expand_abbrev(value)
     if abbrev_table[value] ~= nil then
         return abbrev_table[value]
@@ -98,6 +99,9 @@ local function expand_abbrev(value)
     end
 end
 
+--- Gets a string from the game's message table
+--- @param string_id integer
+--- @return string
 function strings.GetString(string_id)
     local string_addr = memory.readlong(addrs.MessageTable + 4 * string_id)
     local is_anti_huffman_marked = bit.band(string_addr, 0x80000000) ~= 0

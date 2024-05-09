@@ -3,17 +3,16 @@
 local board = require 'gbafe.board'
 local dialogue = require 'gbafe.dialogue'
 local menus = require 'gbafe.menus'
-local items = require 'gbafe.items'
 
 local tolk = require 'tolk'
 
 local prev_x, prev_y = 0, 0
 
 local function coord_to_sheet_column(coord)
-    local a = string.byte('A')
+    local A = string.byte('A')
 
     -- always do first coord
-    local result = string.char(a + coord % 26)
+    local result = string.char(A + coord % 26)
     coord = math.floor(coord / 26)
 
     while coord > 0 do
@@ -23,7 +22,7 @@ local function coord_to_sheet_column(coord)
         -- this is not like numbers where there's zero you can lead with infinitely
         coord = coord - 1 -- so that we start with A and not B
 
-        result = string.char(a + coord % 26) .. result
+        result = string.char(A + coord % 26) .. result
         coord = math.floor(coord / 26)
     end
 
@@ -69,6 +68,9 @@ end
 
 local debug = true
 
+--- Send message for reading to the screen reading.
+--- Will also echo the message in the Lua console, for debugging.
+--- @param message string
 local function output(message)
     if #message > 0 then
         if debug then
@@ -80,6 +82,9 @@ local function output(message)
     end
 end
 
+--- Helper function for pretty-printing toggle status
+--- @param bool_value boolean
+--- @return string
 local function boolean_on_off(bool_value)
     if bool_value then return "on" else return "off" end
 end
@@ -94,6 +99,7 @@ local menu_toggle = false
 
 local prev = {}
 
+---@param func fun(unit: Unit): string
 local function current_unit_output(func)
     local x, y = board.GetCursorPosition()
     local unit = board.GetUnitAt(x, y)
@@ -111,11 +117,14 @@ local function current_unit_output(func)
     end
 end
 
+--- @type Unit|nil
 local last_unit_for_item = nil
 local last_item_slot = -1
 
-local NTH = { [1] = '1st', [2] = "2nd", [3] = "3rd", [4] = "4th", [5] = "5th" }
+local NTH = { [1] = "1st", [2] = "2nd", [3] = "3rd", [4] = "4th", [5] = "5th" }
 
+--- @param unit Unit
+--- @return string
 local function unit_item(unit)
     if last_unit_for_item == nil or unit:unit_id() ~= last_unit_for_item:unit_id() then
         last_item_slot = -1
@@ -123,25 +132,35 @@ local function unit_item(unit)
 
     last_unit_for_item = unit
 
-    if unit:get_item_count() == 1 then
-        return items.GetItemName(unit:get_item(0))
-    end
+    local item_name = nil
 
     for i = 1, 5 do
         local item_slot = (last_item_slot + i) % 5
         local item = unit:get_item(item_slot)
 
-        if item ~= 0 then
-            -- TODO: handle unbreakable items
-            -- local uses = items.GetItemUses(item)
-            -- local max_uses = items.GetItemMaxUses(item)
-
+        if item ~= nil then
             last_item_slot = item_slot
-            return NTH[1 + item_slot] .. " item: " .. items.GetItemName(item)
+
+            item_name = item:name()
+
+            local uses = item:uses()
+            local max_uses = item:max_uses()
+
+            if uses ~= 0xFF then
+                item_name = item_name .. ", " .. ("%d uses out of %d"):format(uses, max_uses)
+            end
         end
     end
 
-    return "This unit has no items"
+    if item_name ~= nil then
+        if unit:get_item_count() == 1 then
+            return item_name
+        else
+            return NTH[1 + last_item_slot] .. " item: " .. item_name
+        end
+    else
+        return "This unit has no items"
+    end
 end
 
 -- NOT OK KEYS: X C A S (Q)
@@ -295,9 +314,11 @@ local function process_menu_items()
     local in_menu = menus.IsMenuActive()
     local current_item = menus.GetCurrentMenuItemName()
 
-    if in_menu then
-        if current_item ~= last_menu_item then
-            output(current_item)
+    if menu_toggle then
+        if in_menu then
+            if current_item ~= last_menu_item then
+                output(current_item)
+            end
         end
     end
 
