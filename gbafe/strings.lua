@@ -5,21 +5,17 @@
 -- However, ROM-hacks of GBAFE work around this by encoding text raw and "marking" the text pointers
 -- We support both
 
+local addrs = require 'gbafe.addresses'
+
 local bit = require 'bit'
 
 local strings = {}
-
--- TODO: move addresses out of these
--- these addresses are also easily ("easily") discovered by searching for DecodeString head
-local addr_HuffTable = 0x0815A72C
-local addr_HuffRoot = 0x0815D488
-local addr_MessageTable = 0x0815D48C
 
 local function huffman_decode(addr)
     -- adapted from this python script (written by me)
     -- https://github.com/StanHash/DOC/blob/master/huffman/huffman.py
 
-    local root_node_addr = memory.readlong(addr_HuffRoot)
+    local root_node_addr = memory.readlong(addrs.HuffRoot)
     local root_node = memory.readlong(root_node_addr)
 
     local byte = 0
@@ -45,7 +41,7 @@ local function huffman_decode(addr)
             -- next_node_idx = 0xFFFF & (node >> (16 * this_bit))
             local next_node_idx = bit.band(0xFFFF, bit.rshift(node, 16 * this_bit))
 
-            node = memory.readlong(addr_HuffTable + next_node_idx * 4)
+            node = memory.readlong(addrs.HuffTable + next_node_idx * 4)
 
             byte = bit.rshift(byte, 1)
             bits = bits - 1
@@ -103,7 +99,7 @@ local function expand_abbrev(value)
 end
 
 function strings.GetString(string_id)
-    local string_addr = memory.readlong(addr_MessageTable + 4 * string_id)
+    local string_addr = memory.readlong(addrs.MessageTable + 4 * string_id)
     local is_anti_huffman_marked = bit.band(string_addr, 0x80000000) ~= 0
 
     if is_anti_huffman_marked then

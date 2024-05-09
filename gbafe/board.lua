@@ -3,22 +3,12 @@
 
 -- Utilities for accessing the board (map)
 
+local addrs = require 'gbafe.addresses'
 local strings = require 'gbafe.strings'
 
-local Unit = require 'gbafe.unit'
+local Unit = require 'gbafe.Unit'
 
 local board = {}
-
--- TODO: those are hardcoded for now to fe8_us addresses
--- move these to dedicated addresses module
-local addr_BmStatus = 0x0202BCB0
-local addr_MapSize = 0x0202E4D4
-local addr_MapUnit = 0x0202E4D8
-local addr_MapTerrain = 0x0202E4DC
-local addr_ActiveUnit = 0x03004E50
-
-local addr_UnitLookup = 0x0859A5D0
-local addr_TerrainNameMsg = 0x0880D374
 
 local function deref_cell(x, y, addr_map)
     local addr_rows = memory.readlong(addr_map)
@@ -29,24 +19,24 @@ local function deref_cell(x, y, addr_map)
 end
 
 function board.GetMapSize()
-    local x = memory.readshort(addr_MapSize + 0)
-    local y = memory.readshort(addr_MapSize + 2)
+    local x = memory.readshort(addrs.MapSize + 0)
+    local y = memory.readshort(addrs.MapSize + 2)
 
     return x, y
 end
 
 function board.GetCursorPosition()
-    local x = memory.readshort(addr_BmStatus + 0x14)
-    local y = memory.readshort(addr_BmStatus + 0x16)
+    local x = memory.readshort(addrs.BmStatus + 0x14)
+    local y = memory.readshort(addrs.BmStatus + 0x16)
 
     return x, y
 end
 
 function board.GetUnitAt(x, y)
-    local unit_id = deref_cell(x, y, addr_MapUnit)
+    local unit_id = deref_cell(x, y, addrs.MapUnit)
 
     if unit_id ~= 0 then
-        local unit_addr = memory.readlong(addr_UnitLookup + unit_id * 4)
+        local unit_addr = memory.readlong(addrs.UnitLookup + unit_id * 4)
         return Unit:new(unit_addr)
     else
         return nil
@@ -54,7 +44,7 @@ function board.GetUnitAt(x, y)
 end
 
 function board.GetActiveUnit()
-    local unit_addr = memory.readlong(addr_ActiveUnit)
+    local unit_addr = memory.readlong(addrs.ActiveUnit)
 
     if unit_addr ~= 0 then
         return Unit:new(unit_addr)
@@ -64,8 +54,7 @@ function board.GetActiveUnit()
 end
 
 -- grabbed from decomp symbols, unused (grabbing from in-game text)
--- TODO: when we are sure this is not needed, remove
-local terrain_names = {
+local fallback_terrain_names = {
     [0x00] = "TILE",
     [0x01] = "Plain",
     [0x02] = "ROAD",
@@ -134,13 +123,21 @@ local terrain_names = {
 }
 
 function board.GetTerrainNameAt(x, y)
-    local terrain = deref_cell(x, y, addr_MapTerrain)
-    local terrain_name_msg = memory.readshort(addr_TerrainNameMsg + 2 * terrain)
+    local terrain = deref_cell(x, y, addrs.MapTerrain)
+    local terrain_name_msg = memory.readshort(addrs.TerrainNameMsg + 2 * terrain)
 
     -- if terrain_names[terrain] ~= nil then
     --     return terrain_names[terrain]
     if terrain_name_msg ~= 0 then
-        return strings.GetString(terrain_name_msg)
+        local terrain_name = strings.GetString(terrain_name_msg)
+
+        if terrain_name ~= nil then
+            return terrain_name
+        end
+    end
+
+    if fallback_terrain_names[terrain] ~= nil then
+        return fallback_terrain_names[terrain]
     else
         return "Unknwown terrain"
     end

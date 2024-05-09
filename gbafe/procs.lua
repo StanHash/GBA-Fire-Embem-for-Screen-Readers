@@ -3,15 +3,13 @@
 
 -- get access to procs
 
-local procs = {}
+local addrs = require 'gbafe.addresses'
 
--- TODO: move elsewhere
-local addr_ProcArray = 0x02024E68
-local addr_ProcTrees = 0x02026A70
+local procs = {}
 
 local function iter_procs(func)
     for i = 0, 0x3F do
-        local proc_addr = addr_ProcArray + i * 0x6C
+        local proc_addr = addrs.ProcArray + i * 0x6C
         local proc_script_addr = memory.readlong(proc_addr + 0x00)
 
         if proc_script_addr ~= 0 then

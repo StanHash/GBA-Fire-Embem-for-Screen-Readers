@@ -3,22 +3,15 @@
 
 -- Access dialogue status
 
+local addrs = require 'gbafe.addresses'
 local procs = require 'gbafe.procs'
 local strings = require 'gbafe.strings'
 local board = require 'gbafe.board'
 
 local dialogue = {}
 
-local addr_StringBuf = 0x202A6AC
-local addr_TalkStatus = 0x0859133C
-
-local addr_TalkProc = 0x08591358
-local addr_TalkWaitForInputProc = 0x085913F0
-
-local addr_PInfoTable = 0x08803D64
-
 function dialogue.IsTalkActive()
-    return procs.IsProcRunning(addr_TalkProc)
+    return procs.IsProcRunning(addrs.TalkProc)
 end
 
 --[[
@@ -59,7 +52,7 @@ end
 
 function dialogue.FindCharacterNameForFace(fid)
     for i = 1, 0x100 do
-        local pinfo_addr = addr_PInfoTable + (i - 1) * 0x34 -- TODO: size is different per game
+        local pinfo_addr = addrs.PInfoTable + (i - 1) * 0x34 -- TODO: size is different per game
         local pfino_fid = memory.readshort(pinfo_addr + 0x06)
 
         if pfino_fid == fid then
@@ -229,10 +222,10 @@ function dialogue.GetCurrentSlice()
         return "There is no dialogue"
     end
 
-    local talk_status_addr = memory.readlong(addr_TalkStatus)
+    local talk_status_addr = memory.readlong(addrs.TalkStatus)
     local talk_string_addr = memory.readlong(talk_status_addr + 0x00)
 
-    return dialogue.Dialogue:new(addr_StringBuf):slice_at_addr(talk_string_addr)
+    return dialogue.Dialogue:new(addrs.StringBuf):slice_at_addr(talk_string_addr)
 end
 
 function dialogue.GetNextSlice()
@@ -240,10 +233,10 @@ function dialogue.GetNextSlice()
         return "There is no dialogue"
     end
 
-    local talk_status_addr = memory.readlong(addr_TalkStatus)
+    local talk_status_addr = memory.readlong(addrs.TalkStatus)
     local talk_string_addr = memory.readlong(talk_status_addr + 0x00)
 
-    return dialogue.Dialogue:new(addr_StringBuf):slice_at_addr(talk_string_addr + 1)
+    return dialogue.Dialogue:new(addrs.StringBuf):slice_at_addr(talk_string_addr + 1)
 end
 
 function dialogue.GetTalkString()
@@ -251,11 +244,11 @@ function dialogue.GetTalkString()
         return "There is no dialogue"
     end
 
-    return dialogue.Dialogue:new(addr_StringBuf).talk
+    return dialogue.Dialogue:new(addrs.StringBuf).talk
 end
 
 function dialogue.IsWaitingForInput()
-    return dialogue.IsTalkActive() and procs.IsProcRunning(addr_TalkWaitForInputProc)
+    return dialogue.IsTalkActive() and procs.IsProcRunning(addrs.TalkWaitForInputProc)
 end
 
 return dialogue
