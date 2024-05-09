@@ -149,6 +149,8 @@ local function unit_item(unit)
             if uses ~= 0xFF then
                 item_name = item_name .. ", " .. ("%d uses out of %d"):format(uses, max_uses)
             end
+
+            break
         end
     end
 
