@@ -91,6 +91,11 @@ function Monitor:on_init_text()
     self:get_text_table(text_addr).strings = {}
 end
 
+function Monitor:on_clear_text()
+    -- same logic
+    self:on_init_text()
+end
+
 function Monitor:on_draw_string()
     local text_addr = memory.getregister("r0")
     local string_addr = memory.getregister("r1")
@@ -101,6 +106,8 @@ function Monitor:on_draw_string()
     self:get_text_table(text_addr).strings[text_cursor] = string_value
 end
 
+--- @param text_info table
+--- @return string|nil
 local function raw_get_text_string(text_info)
     local xs = helpers.sorted_keys(text_info.strings)
 
@@ -134,6 +141,7 @@ function Monitor:init()
     memory.registerexec(addrs.InitTextFont, function() self:on_font_init() end)
     memory.registerexec(addrs.InitText, function() self:on_init_text() end)
     memory.registerexec(addrs.ResetTextFont, function() self:on_font_reset() end)
+    memory.registerexec(addrs.ClearText, function() self:on_clear_text() end)
     memory.registerexec(addrs.Text_DrawString, function() self:on_draw_string() end)
 
     self.ready = true
@@ -145,6 +153,7 @@ function Monitor:clear()
     memory.registerexec(addrs.InitTextFont, nil)
     memory.registerexec(addrs.InitText, nil)
     memory.registerexec(addrs.ResetTextFont, nil)
+    memory.registerexec(addrs.ClearText, nil)
     memory.registerexec(addrs.Text_DrawString, nil)
 end
 

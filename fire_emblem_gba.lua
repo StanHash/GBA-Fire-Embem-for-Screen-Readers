@@ -6,6 +6,7 @@ local menus = require 'gbafe.menus'
 local text = require 'gbafe.text'
 local target_select = require 'gbafe.target_select'
 local battle_forecast = require 'gbafe.battle_forecast'
+local world_map = require 'gbafe.world_map'
 
 local BattleUnit = require 'gbafe.BattleUnit'
 
@@ -278,7 +279,17 @@ local commands = {
             unit_toggle = not unit_toggle
             output("Unit toggle " .. boolean_on_off(unit_toggle))
         else
-            current_unit_output(nicer_unit)
+            if world_map.IsActive() then
+                local wm_name = world_map.GetCurrentWMNodeName()
+
+                if wm_name ~= nil then
+                    output(wm_name)
+                else
+                    output("No world map node")
+                end
+            else
+                current_unit_output(nicer_unit)
+            end
         end
     end,
 
@@ -462,6 +473,20 @@ local function process_screen_change()
     end
 end
 
+local prev_wm_node_name = nil
+
+local function process_world_map()
+    local current_wm_node_name = world_map.GetCurrentWMNodeName()
+
+    if unit_toggle then
+        if current_wm_node_name ~= prev_wm_node_name and current_wm_node_name ~= nil then
+            output(current_wm_node_name)
+        end
+    end
+
+    prev_wm_node_name = current_wm_node_name
+end
+
 local prev_target_addr = nil
 
 local function process_target_change()
@@ -485,6 +510,7 @@ local function main_loop()
 
     -- TODO: those should only be called when on the corresponding screen
 
+    process_world_map()
     process_coordinate_changes()
     process_menu_items()
     process_target_change()

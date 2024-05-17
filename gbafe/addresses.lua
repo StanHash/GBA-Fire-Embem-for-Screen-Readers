@@ -24,6 +24,7 @@ a.ActiveUnit = 0x03004E50
 a.InitTextFont = 0x08003CB8
 a.ResetTextFont = 0x08003D20
 a.InitText = 0x08003D5C
+a.ClearText = 0x08003DC8
 a.Text_DrawString = 0x08004004
 
 a.HuffTable = 0x0815A72C
@@ -40,5 +41,7 @@ a.TargetSelectProc = 0x085B655C
 a.PInfoTable = 0x08803D64
 a.IInfoTable = 0x08809B10
 a.TerrainNameMsg = 0x0880D374
+a.WMMainProc = 0x08A3D748
+a.WMPlayerInterfaceProc = 0x08A3E464
 
 return a

@@ -55,7 +55,7 @@ function helpers.sorted_pairs(tab)
 end
 
 -- join list of strings with sep
-local function join(sep, string_list)
+function helpers.join(sep, string_list)
     if #string_list > 0 then
         local message = string_list[1]
 

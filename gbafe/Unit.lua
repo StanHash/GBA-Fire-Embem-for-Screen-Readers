@@ -86,7 +86,7 @@ function Unit:get_item_raw(slot)
     return memory.readshort(self.unit_addr + 0x1E + 2 * slot)
 end
 
---- @return Item
+--- @return Item|nil
 function Unit:get_item(slot)
     local raw_item = self:get_item_raw(slot)
 

@@ -68,6 +68,10 @@ local function huffman_decode(addr)
 end
 
 -- this is public, to allow other modules to grab text from ram
+
+--- @param addr integer
+--- @param end_addr integer?
+--- @return string
 function strings.DecodeRawString(addr, end_addr)
     local result = ""
 
